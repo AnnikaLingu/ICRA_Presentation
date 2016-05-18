@@ -1,0 +1,7 @@
+English	Prime	Dutch	MovieFile
+TO-WHISK	opkloppen	OPKLOPPEN	TO-WHISK.mpeg
+TO-FISH	vissen	VISSEN	TO-FISH.mpeg
+RATTLE	rammelaar	RAMMELAAR	RATTLE.mpeg
+MILK	melk	MELK	MILK.mpeg
+COWBOY	cowboy	COWBOY	COWBOY.mpeg
+BREAD	brood	BROOD	BREAD.mpeg

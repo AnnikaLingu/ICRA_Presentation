@@ -1,0 +1,433 @@
+######################## CONDITION INFO SUBS ##############################
+
+include "IconicityRatingsINFO.pcl";		# Include all the variables.
+#--------------------------Get_Kbd_Input-------------------------------------
+sub GetKeyboardInput(string inpstr1) begin
+
+	t_text1.set_caption(inpstr1);
+	t_text1.redraw();
+	t_text2.set_caption(" ");
+	t_text2.redraw();
+	p_KeyboardInput.present();
+	system_keyboard.set_case_mode(3); # Hoofdletters mogelijk.
+	sKeyboardInput = system_keyboard.get_input( p_KeyboardInput, t_text2 ); # Hier zit de backspace ingebakken.
+
+end;
+
+#-----------------------------Get_practstim_file------------------------------------
+sub Get_practstim_file(string str ) 
+begin    
+	int iTrialcount;
+	input_file inputfile = new input_file;
+	inputfile.open( str );
+	inputfile.set_delimiter( '\n' ); 								# for get_line()
+	string sDummy = inputfile.get_line();							# dummy read of the first line
+
+	loop iTrialcount = 1 until								
+		((inputfile.end_of_file()) || (!inputfile.last_succeeded()) || (iTrialcount > iPractTrialSize))
+	begin
+		sDummy = inputfile.get_line();
+		
+		sDummy.split("\t",asPractStimdata[iTrialcount]);
+		iTrialcount = iTrialcount + 1;
+	end;  
+	
+	if !inputfile.last_succeeded() then
+		term.print( "Error - not enough lines in stimuli List\n" )
+	elseif !inputfile.end_of_file() then
+		term.print( "Error - too many lines in stimuli List\n" )
+	end;   
+	inputfile.close();
+  
+end;   
+
+#-----------------------------Get_stimulus_file------------------------------------
+sub GetStimulusInputFile(string str ) 
+begin    
+	
+	input_file inputfile = new input_file;
+	inputfile.open( str );
+	inputfile.set_delimiter( '\n' ); 								# for get_line()
+	string sDummy = inputfile.get_line();							# dummy read of the first line
+
+	loop iTrialCount = 1 until								
+		((inputfile.end_of_file()) || (!inputfile.last_succeeded()) || (iTrialCount > iTrialSize))
+	begin
+		sDummy = inputfile.get_line();
+		
+		sDummy.split("\t",asTrialInputData[iTrialCount]);
+		iTrialCount = iTrialCount + 1;
+	end;  
+	
+	if !inputfile.last_succeeded() then
+		term.print( "Error - not enough lines in stimuli List\n" )
+	elseif !inputfile.end_of_file() then
+		term.print( "Error - too many lines in stimuli List\n" )
+	end;   
+	inputfile.close();
+  
+end;    
+
+#-----------------------------Get_shuffledlist_file------------------------------------
+/* sub GetShuffledInputFile(string str ) 
+begin    
+	
+	input_file inputfile = new input_file;
+	inputfile.open( str );
+	inputfile.set_delimiter( '\n' ); 								# for get_line()
+	string sDummy = inputfile.get_line();							# dummy read of the first line
+
+	loop iTrialCount = 1 until								
+		((inputfile.end_of_file()) || (!inputfile.last_succeeded()) || (iTrialCount > iTrialSize))
+	begin
+		sDummy = inputfile.get_line();
+		
+		sDummy.split("\t",asShuffle[iTrialCount]);
+		iTrialCount = iTrialCount + 1;
+	end;  
+	
+	if !inputfile.last_succeeded() then
+		term.print( "Error - not enough lines in stimuli List\n" )
+	elseif !inputfile.end_of_file() then
+		term.print( "Error - too many lines in stimuli List\n" )
+	end;   
+	inputfile.close();
+  
+end; 
+*/
+ 
+############################ LOGFILE #######################   
+#-----------------------------CreateOutput------------------------------------	
+sub CreateOutput(string str ) begin
+
+	ratinglog = "";
+
+   ratinglog.append("Scenario - TemplateExp\n");
+   ratinglog.append("Logfile written - " + date_time() + "\n");
+   ratinglog.append("Subject: " + sSubjectnumber + "\n\n");
+  
+	ratinglog.append("Trial"+"\t");   
+	ratinglog.append("Video"+"\t");  
+	ratinglog.append("DUTCH"+"\t");  
+	ratinglog.append("ENGLISH"+"\t");  
+	ratinglog.append("Answer"+"\t");
+	ratinglog.append("Certainty"+"\t");
+	ratinglog.append("Iconicity"+"\n"); 
+   
+   ofile1 = new output_file;
+   ofile1.open_append( str ); # append
+   #Create header of output file
+   ofile1.print( ratinglog );
+	ratinglog = "";
+   ofile1.close();
+
+end; 
+
+#-----------------------------WriteOutput-------------------
+sub WriteOutput(string str, int jj) begin
+
+	ratinglog = "";
+	
+#	loop iLoopCnt = 1 until iLoopCnt > iTrialSize 
+#	begin
+		ratinglog.append(asResults[jj][1]+"\t");   			# write trial number
+		ratinglog.append(asResults[jj][2]+"\t");   			# write video filename
+		ratinglog.append(asResults[jj][3]+"\t");   			# write target word
+		ratinglog.append(asResults[jj][4]+"\t");				# write english
+		ratinglog.append(asResults[jj][5]+"\t");				# write answer
+		ratinglog.append(asResults[jj][6]+"\t");				# write certainty
+		ratinglog.append(asResults[jj][7]+"\n");				# write iconicity
+#		iLoopCnt = iLoopCnt + 1;									# ready for next loop run
+#	end;
+	
+   ofile1.open_append ( str ); 									# append
+   ofile1.print( ratinglog );
+	ratinglog = "";
+   ofile1.close();
+end;
+
+### Safe item order ###
+sub SafeShuffle (string str) begin
+	shuffledlist = "";
+	
+	shuffledlist.append("Scenario - IconicityRatings \n");
+	shuffledlist.append("List produced - " + date_time() + "\n");
+	shuffledlist.append("Subject: " + sSubjectnumber + "\n");
+	
+	int jj;
+	loop jj = 1 until jj > iTrialSize
+	begin
+		shuffledlist.append(string(aiShuffle[jj]) + "\n");
+		jj = jj + 1;
+	end;
+	
+	ofile2 = new output_file;
+   ofile2.open_append( str ); # append
+   #Create header of output file
+   ofile2.print( shuffledlist );
+	shuffledlist = "";
+   ofile2.close();
+end;
+
+#-----------------------------ShowDebugScreen-------------------
+
+sub ShowDebugScreen(int ii) begin
+
+		t_debug1.set_caption(asTrialInputData[ii][1]);
+		t_debug2.set_caption(asTrialInputData[ii][2]);
+		t_debug3.set_caption(asTrialInputData[ii][3]);
+		t_debug1.redraw();
+		t_debug2.redraw();
+		t_debug3.redraw();
+		
+end;
+
+#################### WAIT ROUTINES #######################
+
+#-----------------------------Wait------------------------------------
+sub WaitTime(int iDurWait2) begin
+
+	loop 
+		iTimeStamp = clock.time();
+	until (clock.time() - iTimeStamp >= iDurWait2)
+	begin 
+	end;
+
+end;
+
+#-----------------------------WaitSubjectReady------------------------------------
+sub WaitForAllButtonpress begin
+    
+   loop 
+		iCountOld = response_manager.total_response_count()
+   until response_manager.total_response_count() > iCountOld
+   begin 
+	end;
+   
+end;
+
+#-----------------------------WaitForAllButtonpressTime------------------------------------
+sub WaitForAllButtonpressTime( int iDurWait2 ) begin
+
+   loop 
+		iCountOld = response_manager.total_response_count();	
+		iTimeStamp = clock.time();
+	until ((response_manager.total_response_count() > iCountOld) || (clock.time() - iTimeStamp >= iDurWait2))
+   begin 
+	end;
+
+end;
+
+#-----------------------------WaitForButtonpress------------------------------------
+sub WaitForButtonpress( int iButton2 ) begin
+
+   loop 
+		iCountOld = response_manager.total_response_count(iButton2)
+   until response_manager.total_response_count(iButton2) > iCountOld
+   begin 
+		iButton = response_manager.last_response();
+	end;
+
+end;
+
+
+#-----------------------------WaitForButtonpressTime------------------------------------
+sub WaitForButtonpressTime( int iButton2 ) begin
+
+   loop 
+		iCountOld = response_manager.total_response_count(iButton2);
+		iTimeStamp = clock.time();
+   until response_manager.total_response_count(iButton2) > iCountOld || (clock.time() - iTimeStamp >= 4090)	#Wait for max. 5 seconds
+   begin 
+		iButton = response_manager.last_response();
+	end;
+
+end;
+
+#----------------------------------- WaitForRangeButtonPress (press one of a few specified buttons) ------------------------------------------------------
+sub WaitForRangeButtonPress(int iLowLimit, int iHighLimit)
+begin
+	int iKeyResult;
+	bool bEnd = false; # = ist eine Zuweisung
+	
+	loop 
+		iTimeStamp = clock.time();
+	until bEnd == true # == ist ein Vergleich
+	begin
+	
+		iCountOld = response_manager.total_response_count();
+		# wait for any button press
+		loop until response_manager.total_response_count() > iCountOld 
+		begin 
+		end;
+	
+		# look at the last response
+		iKeyResult = response_manager.last_response();
+		if ((iKeyResult >= iLowLimit) && (iKeyResult <= iHighLimit))
+		then 
+			iButton = response_manager.last_response();
+			bEnd = true; # = wenn das eine wahr ist, dann aendere bEnd
+		elseif (clock.time() - iTimeStamp >= 4090)
+		then 
+			bEnd = true
+		end;
+		
+	end;
+end;
+
+########################## SHUFFLE #######################
+
+sub Shuffle begin
+	
+	loop iTrialNo = 1 until iTrialNo >(iTrialSize)
+	begin
+		aiShuffle[iTrialNo] = iTrialNo;
+		
+		iTrialNo = iTrialNo + 1;
+	end;
+end;
+
+################## RATINGS ###############################
+
+### Certainty rating ###
+sub Certainty begin
+	t_Prime.set_caption("Je antwoord was: " + sKeyboardInput);
+	t_Prime.redraw();
+	t_low.set_caption("helemaal niet zeker");
+	t_low.redraw();
+	t_high.set_caption("heel erg zeker");
+	t_high.redraw();
+	t_Question.set_caption("Hoe zeker ben je van je vertaling?");
+	t_Question.redraw();
+	p_Rating.present();
+	iButton = 0;
+	WaitForRangeButtonPress(1,7);	
+	sCertainty = string(iButton);	
+end;
+
+### Iconicity rating ###
+sub Iconicity begin	
+	t_Prime.set_caption("De betekenis van het gebaar was: " + asTrialInputData[iShuffle][2]);
+	t_Prime.redraw();
+	t_Question.set_caption("In hoeverre lijkt het gebaar op de betekenis ervan?");
+	t_Question.redraw();
+	t_low.set_caption("helemaal niet veel");
+	t_low.redraw();
+	t_high.set_caption("heel erg veel");
+	t_high.redraw();
+	p_Rating.present();
+	iButton = 0;
+	WaitForRangeButtonPress(1,7);
+	sIconicity = string(iButton);	
+end;	
+
+############################ TRIAL #######################   
+
+#-----------------------------RunPracticeTrials-------------------
+sub RunPracticeTrials begin
+
+	loop iTrialNo = 1 until iTrialNo > iPractTrialSize
+   begin
+   
+		p_NextBlock.present();
+		asResults[iTrialNo][1] = string(iTrialNo);    #Write trial number into array
+		WaitForAllButtonpress();
+	
+	#	ShowDebugScreen(iTrialNo);
+	#  Present video
+		p_Default.present();
+		WaitTime(190);
+		video v_Vid2 = new video;
+		v_Vid2.set_filename(asPractStimdata[iTrialNo][4]);
+		v_Vid2.prepare();
+		video_player.play(v_Vid2, asPractStimdata[iTrialNo][4]);
+	
+		loop until !video_player.playing()
+		begin
+		end;
+		v_Vid2.release();
+		asResults[iTrialNo][2] = asPractStimdata[iTrialNo][4]; #Write Videoname into array
+		asResults[iTrialNo][3] = asPractStimdata[iTrialNo][2]; #Write Prime into array
+		asResults[iTrialNo][4] = asPractStimdata[iTrialNo][1]; #Write ENGLISH into array
+	
+	### Responses ###
+		GetKeyboardInput("Vertaal nu het gebaar \ndat je net gezien hebt in EEN WOORD.  \n Druk op ENTER als je klaar bent.");
+		asResults[iTrialNo][5] = sKeyboardInput;
+		
+		Certainty();
+		asResults[iTrialNo][6] = sCertainty;		#Write sCertainty into results array
+	
+		t_Prime.set_caption("De betekenis van het gebaar was: " + asPractStimdata[iTrialNo][2]);
+		t_Prime.redraw();
+		t_Question.set_caption("In hoeverre lijkt het gebaar op de betekenis ervan?");
+		t_Question.redraw();
+		t_low.set_caption("helemaal niet veel");
+		t_low.redraw();
+		t_high.set_caption("heel erg veel");
+		t_high.redraw();
+		p_Rating.present();
+		iButton = 0;
+		WaitForRangeButtonPress(1,7);
+		sIconicity = string(iButton);	
+		asResults[iTrialNo][7] = sIconicity;		#Write sIconicity into results array
+
+#	ShowDebugScreen(iTrialNo);
+#	WaitForAllButtonpress();
+		WriteOutput(outputfilename, iTrialNo);							# write results to logfile
+
+	iTrialNo = iTrialNo + 1;												# ready for next loop run
+	end;
+	
+	default.present();
+end;
+
+
+#-----------------------------RunTrials-------------------
+sub RunTrials(int iStartwith, int iEndwith) begin	
+	loop iTrialNo = iStartwith until iTrialNo > iEndwith
+   begin
+	
+	#### KLAAR ###
+		p_NextBlock.present();
+		asResults[iTrialNo][1] = string(iTrialNo);    #Write trial number into array
+		WaitForAllButtonpress();
+	
+#	ShowDebugScreen(iTrialNo);
+		iShuffle = aiShuffle[iTrialNo];
+	#Present video
+		p_Default.present();
+		WaitTime(190);
+		video v_Vid2 = new video;
+		term.print(string(iShuffle)+", ");
+		v_Vid2.set_filename(asTrialInputData[iShuffle][4]);
+		v_Vid2.prepare();
+		video_player.play(v_Vid2, asTrialInputData[iShuffle][4]);
+	
+		loop until !video_player.playing()
+		begin
+		end;
+		v_Vid2.release();
+		asResults[iTrialNo][2] = asTrialInputData[iShuffle][4]; #Write Videoname into array
+		asResults[iTrialNo][3] = asTrialInputData[iShuffle][2]; #Write Prime into array
+		asResults[iTrialNo][4] = asTrialInputData[iShuffle][1]; #Write ENGLISH into array
+	
+	### Responses ###
+		GetKeyboardInput("Vertaal nu het gebaar \ndat je net gezien hebt in EEN WOORD. \n Druk op ENTER als je klaar bent.");
+		asResults[iTrialNo][5] = sKeyboardInput;
+		
+		Certainty();
+		asResults[iTrialNo][6] = sCertainty;		#Write sCertainty into results array
+	
+		Iconicity();
+		asResults[iTrialNo][7] = sIconicity;		#Write sIconicity into results array
+
+#	ShowDebugScreen(iTrialNo);
+#	WaitForAllButtonpress();
+		WriteOutput(outputfilename, iTrialNo);							# write results to logfile
+
+	iTrialNo = iTrialNo + 1;												# ready for next loop run
+	end;
+	term.print("iTrialNo at end" +string(iTrialNo)+" ");
+
+	default.present();
+end;

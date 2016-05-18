@@ -1,0 +1,55 @@
+############################# INITIATION ####################################
+include "IconicityRatingsSUBS.pcl";									# Include all the subroutines.
+loop until clock.time() >= 0 begin end; 						# Loop until the clock is no longer negative.
+
+sSubjectnumber = logfile.subject();								# Get subject name
+if (sSubjectnumber.count()==0) 
+then
+	GetKeyboardInput ("Please enter subject number: ");
+	sSubjectnumber = sKeyboardInput;
+end;
+
+GetStimulusInputFile(sStimfilename);								# read in stimuli using our own import routine
+Get_practstim_file(sPractStimfilename);								# read in stimuli for practice
+#iTrialSize = asTrialInputData.count();
+
+outputfilename = sSubjectnumber + "_" + "logfile.txt";
+
+CreateOutput(outputfilename);										# Write header things of logfile
+
+##########################start experiment###############################
+#Shuffle();
+aiShuffle.shuffle();												# randomize blocks
+sShuffledlistname = sSubjectnumber + "_" + "shuffledlist.txt";
+SafeShuffle(sShuffledlistname);
+#asStimdata[1].shuffle();											# randomize trials in block 1
+#asStimdata[2].shuffle();											# randomize trials in block 2
+
+p_Welcome.present();
+WaitForAllButtonpress();
+
+p_InstrExp.present();
+WaitForAllButtonpress();
+
+p_InstrPractice.present();
+WaitForAllButtonpress();
+RunPracticeTrials();
+
+#GetShuffledInputFile(sShuffledlistname);
+t_instruct1a.set_caption("Het experiment gaat nu starten.");
+t_instruct1a.redraw();
+p_InstrPractice.present();
+WaitForAllButtonpress();
+
+RunTrials(1,99);
+
+p_NextGroup.present();
+WaitForAllButtonpressTime(5000);
+RunTrials(100,199);
+
+p_NextGroup.present();
+WaitForAllButtonpressTime(5000);
+RunTrials(200,iTrialSize);
+
+p_End.present();
+WaitForAllButtonpress();
